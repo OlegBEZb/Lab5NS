@@ -62,7 +62,7 @@ proc finish { file mod } {
 }
 
 # Задаем заголовок графика и период вывода номеров пакетов.
-set label "tcp/ftp+telnet"
+set label "tcp/ftp"
 set mod 80
 
 # Задаем топологию сети.
@@ -71,19 +71,52 @@ $ns color 2 Red
 
 set s1 [$ns node]
 set s2 [$ns node]
+set s3 [$ns node]
 
 set r1 [$ns node]
 set r2 [$ns node]
+set r3 [$ns node]
+set r4 [$ns node]
+set r5 [$ns node]
 
-$ns duplex-link $s1 $r1 1Mb 100ms DropTail
-$ns duplex-link $s2 $r1 1Mb 100ms DropTail
-$ns duplex-link $r1 $r2 64kb 100ms DropTail
+set k1 [$ns node]
+set k2 [$ns node]
+set k3 [$ns node]
 
-$ns duplex-link-op $s1 $r1 orient right-down
-$ns duplex-link-op $s2 $r1 orient right-up
+$ns duplex-link $r1 $r2 256kb 200ms DropTail
 $ns duplex-link-op $r1 $r2 orient right
 
-$ns queue-limit $r1 $r2 5
+$ns duplex-link $s1 $r1 2Mb 10ms DropTail
+$ns duplex-link-op $s1 $r1 orient right
+
+$ns duplex-link $r1 $s2 2Mb 10ms DropTail
+$ns duplex-link-op $r1 $s2 orient up
+
+$ns duplex-link $r1 $s3 2Mb 10ms DropTail
+$ns duplex-link-op $r1 $s3 orient down
+
+$ns duplex-link $r2 $r3 2Mb 10ms DropTail
+$ns duplex-link-op $r2 $r3 orient right-up
+
+$ns duplex-link $r2 $r5 2Mb 10ms DropTail
+$ns duplex-link-op $r2 $r5 orient right-down
+
+$ns duplex-link $r3 $k1 2Mb 10ms DropTail
+$ns duplex-link-op $r3 $k1 orient right-up
+
+$ns duplex-link $r3 $r4 2Mb 10ms DropTail
+$ns duplex-link-op $r3 $r4 orient right
+
+$ns duplex-link $r4 $k2 2Mb 10ms DropTail
+$ns duplex-link-op $r4 $k2 orient right
+
+$ns duplex-link $r5 $k3 2Mb 10ms DropTail
+$ns duplex-link-op $r5 $k3 orient right
+
+$ns duplex-link $r4 $k3 2Mb 10ms DropTail
+$ns duplex-link-op $r4 $k3 orient down
+
+$ns queue-limit $r1 $r2 8
 $ns duplex-link-op $r1 $r2 queuePos 0.5
 
 #Подготавливаем файлы out.tr и out2.tr для вывода результатов.
@@ -96,31 +129,18 @@ $ns trace-queue $r2 $r1 $fout2
 
 # Создаем источники и приемники трафика.
 set snk1 [new Agent/TCPSink]
-$ns attach-agent $r2 $snk1
-set snk2 [new Agent/TCPSink]
-$ns attach-agent $r2 $snk2
+$ns attach-agent $k2 $snk1
 
 set tcp1 [new Agent/TCP]
-$tcp1 set maxcwnd_ 10
+$tcp1 set maxcwnd_ 15
 $tcp1 set packetSize_ 100
 $ns attach-agent $s1 $tcp1
 $ns connect $tcp1 $snk1
 $tcp1 set fid_ 1
 set ftp1 [$tcp1 attach-source FTP]
 
-set tcp2 [new Agent/TCP]
-$tcp2 set maxcwnd_ 10
-$tcp2 set packetSize_ 100
-$ns attach-agent $s2 $tcp2
-$ns connect $tcp2 $snk2
-$tcp2 set fid_ 2
-set tln1 [$tcp2 attach-source Telnet]
-$tln1 set interval_ 0.02s
-
 # Задаем хронологию событий.
 $ns at 0.1 "$ftp1 produce 200"
-$ns at 0.5 "$tln1 start"
-$ns at 1.5 "$tln1 stop"
 # Закрываем выходные файлы и вызываем процедуру обработки и вывода
 # результатов finish.
 $ns at 6.0 "ns flush-trace; \
