@@ -25,8 +25,9 @@ proc finish { file mod } {
             if ($1 == "d")
             print $2, ($8-1)*(mod+10) + ($11 % mod)}
         } mod=$mod out.tr > temp.d
-        # Обрабатываем файл результатов моделирования out2.tr. Выводим
-        # информацию о пакетах подтверждений (ACK) во временный файл temp.p2.
+        # Обрабатываем файл результатов моделирования out2.tr. 
+
+#Выводим информацию о пакетах подтверждений (ACK) во временный файл temp.p2.
         exec rm -f temp.p2
         exec touch temp.p2
         exec awk {
@@ -36,6 +37,7 @@ proc finish { file mod } {
             print $2, ($8-1)*(mod+10) + ($11 % mod)
         }
     } mod=$mod out2.tr > temp.p2
+
     # Объединяем информацию с соответствующими заголовками из файлов
     # temp.p, temp.d и temp.p2 во входной файл для утилиты Xgraph - temp.rands.
     puts $f \"packets
@@ -46,6 +48,7 @@ proc finish { file mod } {
     flush $f
     exec cat temp.p2 >@ $f
 
+#Отображение отброшенных пакетов маркерами в форме крестов
     puts $f [format "\n\"skip-1\n0 1\n\n"]
 
     puts $f \"drops
